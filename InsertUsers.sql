@@ -154,3 +154,20 @@ SELECT
 FROM t_user
 GROUP BY username
 HAVING COUNT(*) > 1;
+
+-- ============================================
+-- 如果建表时没有，
+-- 那么新增 password 和 update_time 字段
+-- ============================================
+
+ALTER TABLE `t_user`
+ADD COLUMN `password` VARCHAR(100) NOT NULL COMMENT 'BCrypt Hash' AFTER `username`,
+ADD COLUMN `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间' AFTER `create_time`;
+
+-- ============================================
+-- 统一插入默认密码和更新时间
+-- ============================================
+
+UPDATE `t_user`
+SET `password` = '$2a$10$Hbuc80xfJuAmtmz9n2pZW.yq7Ei4a5SVS0jDbcWWedrLkJHO5dDem',
+    `update_time` = NOW();

@@ -17,14 +17,32 @@ CREATE TABLE `t_order` (
   INDEX `idx_user_status_time` (`user_id`, `status`, `create_time`) COMMENT '联合索引-用户订单查询'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='订单表';
 
+-- 【索引优化】
+-- 订单号唯一索引（如果订单号必须唯一）
+ALTER TABLE t_order DROP INDEX idx_order_no;
+ALTER TABLE t_order ADD UNIQUE INDEX uk_order_no (order_no);
+
+-- 金额索引（用于按金额排序和统计）
+ALTER TABLE t_order ADD INDEX idx_total_amount (total_amount);
+
+-- 管理后台按时间+状态查询所有订单
+ALTER TABLE t_order ADD INDEX idx_create_time_status (create_time, status);
+
+-- 商品销售统计（商品ID + 状态 + 时间）
+ALTER TABLE t_order ADD INDEX idx_product_status_time (product_id, status, create_time);
+
+
 -- 用户表
 CREATE TABLE `t_user` (
   `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '用户ID',
+  `userno` VARCHAR(10) UNIQUE NOT NULL COMMENT '用户唯一标识',
   `username` VARCHAR(50) NOT NULL COMMENT '用户名',
+  `password` VARCHAR(100) NOT NULL COMMENT '加密密码（BCrypt 哈希）',
   `nickname` VARCHAR(50) COMMENT '昵称',
   `phone` VARCHAR(20) COMMENT '手机号',
   `email` VARCHAR(100) COMMENT '邮箱',
   `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   UNIQUE KEY `uk_username` (`username`),
   INDEX `idx_phone` (`phone`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
@@ -41,17 +59,3 @@ CREATE TABLE `t_product` (
   UNIQUE KEY `uk_product_code` (`product_code`),
   INDEX `idx_category` (`category`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商品表';
-
--- 【索引优化】
--- 订单号唯一索引（如果订单号必须唯一）
-ALTER TABLE t_order DROP INDEX idx_order_no;
-ALTER TABLE t_order ADD UNIQUE INDEX uk_order_no (order_no);
-
--- 金额索引（用于按金额排序和统计）
-ALTER TABLE t_order ADD INDEX idx_total_amount (total_amount);
-
--- 管理后台按时间+状态查询所有订单
-ALTER TABLE t_order ADD INDEX idx_create_time_status (create_time, status);
-
--- 商品销售统计（商品ID + 状态 + 时间）
-ALTER TABLE t_order ADD INDEX idx_product_status_time (product_id, status, create_time);
